@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>跳转中 · 咕咕嘎嘎</title>
+<title>咕咕嘎嘎</title>
 <script>
-// 咕咕嘎嘎根域名跳转:管理页(write/edit/export)留在 Cloudflare pages.dev 登录
-// github.io 只读门户 + 这几个地址做 301 式跳转(GitHub Pages 纯静态,404 页 JS 跳转)
+// 咕咕嘎嘎根域名 404 跳转:
+// - 管理页(write/edit/export)留在 Cloudflare pages.dev 登录
+// - 分享页一律用 github.io:旧版 /s/<token> 链接跳到 /share/<token>.html;静态页 404(生成中/已删)留在 github.io 提示,不再跳 pages.dev
 (function () {
   var path = location.pathname;
   var map = {
@@ -21,8 +22,20 @@
     '/export.html': 'https://gugugaga-viw.pages.dev/export.html'
   };
   if (map[path]) { location.replace(map[path]); return; }
-  // 旧版分享页(历史 /s/<token> 快照)→ 跳 pages.dev 渲染
-  if (path.indexOf('/s/') === 0) { location.replace('https://gugugaga-viw.pages.dev' + path); return; }
+  // 旧版分享链接(历史 /s/<token>)→ 跳 github.io 静态快照页
+  if (path.indexOf('/s/') === 0) {
+    location.replace('/share/' + path.substring(3) + '.html');
+    return;
+  }
+  // 分享静态页 404:生成中(GitHub Pages 发布约 1-2 分钟)或已删除 → 留在 github.io
+  if (path.indexOf('/share/') === 0) {
+    document.title = '分享正在生成或不存在 · 咕咕嘎嘎';
+    document.write('<div style="font-family:-apple-system,\'PingFang SC\',sans-serif;text-align:center;padding:56px 16px;color:#1f2937">' +
+      '<h2 style="font-weight:800;margin-bottom:8px">分享页面正在生成或不存在</h2>' +
+      '<p style="color:#6b7280">刚刚生成的分享约 1-2 分钟后生效,请稍后刷新;<br>如仍打不开,可能已被分享者删除。</p>' +
+      '<p><a href="' + location.origin + '/">← 回咕咕嘎嘎首页</a></p></div>');
+    return;
+  }
   document.title = '页面不存在 · 咕咕嘎嘎';
   document.write('<div style="font-family:-apple-system,\'PingFang SC\',sans-serif;text-align:center;padding:48px 16px;color:#1f2937">' +
     '<h2 style="font-weight:800">页面不存在</h2>' +
