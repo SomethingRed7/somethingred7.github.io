@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>咕咕嘎嘎 · 旅行日记</title>
+  <link rel="stylesheet" href="style.css?v=20260818f">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-main">
+      <h1 class="site-title">咕咕嘎嘎</h1>
+      <p class="site-subtitle">记录每一段在路上</p>
+    </div>
+    <span id="portal-user" class="user-area" hidden></span>
+  </header>
+
+  <main class="layout">
+    <section class="panel calendar-panel">
+      <div class="cal-nav">
+        <button id="cal-prev" class="cal-btn" aria-label="上个月">‹</button>
+        <h2 id="cal-title"></h2>
+        <button id="cal-next" class="cal-btn" aria-label="下个月">›</button>
+      </div>
+      <div class="cal-weekdays">
+        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+      </div>
+      <div id="cal-grid" class="cal-grid"></div>
+    </section>
+
+    <section class="panel day-panel">
+      <h2 id="day-title" class="panel-heading">点击日历上的日期,查看当天动态</h2>
+      <div class="panel-tabs" id="panel-tabs">
+        <button type="button" class="tab-btn active" data-tab="todos">当日待办</button>
+        <button type="button" class="tab-btn" data-tab="entries">当日动态</button>
+        <button type="button" class="tab-btn" data-tab="album" hidden>专辑查看</button>
+      </div>
+      <div id="tab-todos" class="tab-pane">
+        <div id="day-todos" class="todo-section" hidden></div>
+      </div>
+      <div id="tab-entries" class="tab-pane" hidden>
+        <div class="todo-head day-head"><span>当日动态</span>
+          <a id="btn-entry-add" class="btn-add-entry" href="edit.html" hidden>记一把</a>
+        </div>
+        <div id="day-entries" class="entries"></div>
+      </div>
+      <div id="tab-album" class="tab-pane" hidden>
+        <div class="todo-head day-head"><span id="stream-title">专辑</span>
+          <a id="btn-album-share" class="btn-add-entry" href="export.html" hidden>生成分享页</a>
+        </div>
+        <div id="album-map" class="album-map"></div>
+        <div id="album-chips" class="album-chips"></div>
+        <div id="stream" class="entries"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">咕咕嘎嘎 · 记录每一段在路上 · <a href="https://somethingred7.github.io/write">管理</a></footer>
+
+  <div id="lightbox" class="lightbox" aria-hidden="true"><img alt="查看大图"></div>
+  <div id="preview-modal" class="modal" hidden>
+    <div class="modal-card">
+      <div id="preview-body"></div>
+      <button type="button" id="btn-preview-close" class="btn-small">关闭</button>
+    </div>
+  </div>
+
+  <!-- 日记弹窗(新建/编辑普通条目,「记一把」与编辑入口共用;打卡弹窗同款) -->
+  <div id="entry-modal" class="ckin-modal" hidden>
+    <div class="ckin-box">
+      <div class="ckin-head"><span id="em-title">写日记</span><button type="button" id="em-close" class="btn-small">✕</button></div>
+      <label class="ckin-vis-label" for="em-date">日期</label>
+      <input type="date" id="em-date">
+      <input type="text" id="em-title-input" maxlength="200" placeholder="标题(可选)">
+      <textarea id="em-text" maxlength="5000" rows="4" placeholder="正文"></textarea>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="em-vis">可见性</label>
+        <select id="em-vis">
+          <option value="public" selected>公开</option>
+          <option value="private">私有</option>
+        </select>
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="em-album">专辑</label>
+        <select id="em-album">
+          <option value="">不设专辑</option>
+          <option value="__new__">➕ 新建专辑…</option>
+        </select>
+      </div>
+      <div class="ckin-loc-row">
+        <input id="em-loc" maxlength="80" placeholder="地点(可选)">
+        <button type="button" id="em-locate" class="btn-small" title="自动定位">📍 定位</button>
+        <button type="button" id="em-map" class="btn-small" title="地图选点">🗺️ 地图</button>
+      </div>
+      <div class="ckin-photos" id="em-photos">
+        <label class="ckin-add" for="em-files">+ 照片(可选,≤20 张)</label>
+        <input type="file" id="em-files" accept="image/*" multiple hidden>
+      </div>
+      <div id="em-existing" class="ckin-existing" hidden></div>
+      <div id="em-new-preview" class="ckin-new-preview" hidden></div>
+      <div class="ckin-actions">
+        <button type="button" id="em-save" class="btn-small">发布</button>
+      </div>
+      <div id="em-status" class="form-status"></div>
+    </div>
+  </div>
+
+  <!-- 打卡弹窗(勾选待办时;照片/定位/备注均可选填) -->
+  <div id="ckin-modal" class="ckin-modal" hidden>
+    <div class="ckin-box">
+      <div class="ckin-head"><span id="ckin-title">打卡</span><button type="button" id="ckin-del-record" class="btn-small btn-danger" hidden>删除打卡</button></div>
+      <div class="ckin-todo" id="ckin-todo"></div>
+      <input type="text" id="ckin-title-input" maxlength="200" placeholder="待办标题" hidden>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="ckin-album">专辑</label>
+        <select id="ckin-album" class="ckin-album">
+          <option value="">不设专辑</option>
+          <option value="__new__">➕ 新建专辑…</option>
+        </select>
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="ckin-vis">可见性</label>
+        <select id="ckin-vis">
+          <option value="public" selected>公开</option>
+          <option value="private">私有</option>
+        </select>
+      </div>
+      <textarea id="ckin-note" maxlength="5000" rows="2" placeholder="备注(可选)"></textarea>
+      <div class="ckin-photos" id="ckin-photos">
+        <label class="ckin-add" for="ckin-files">+ 照片(可选,≤9 张)</label>
+        <input type="file" id="ckin-files" accept="image/*" multiple hidden>
+      </div>
+      <div id="ckin-existing" class="ckin-existing" hidden></div>
+      <div class="ckin-loc-row">
+        <input id="ckin-loc" maxlength="80" placeholder="定位(可选,如:橘子洲)">
+        <button type="button" id="ckin-locate" class="btn-small" title="自动定位">📍 定位</button>
+        <button type="button" id="ckin-map" class="btn-small" title="地图选点">🗺️ 地图</button>
+      </div>
+      <div class="ckin-actions">
+        <button type="button" id="ckin-save" class="btn-small">保存打卡</button>
+      </div>
+      <div id="ckin-status" class="form-status"></div>
+    </div>
+  </div>
+
+  <!-- 打卡/写日记共用地 图选点弹层(共享 loc-picker.js) -->
+  <div id="loc-overlay" class="loc-overlay" hidden>
+    <div class="loc-overlay-card">
+      <div class="loc-overlay-head">
+        <span class="loc-overlay-title">地图选点</span>
+        <button type="button" id="btn-loc-close" class="btn-small">✕</button>
+      </div>
+      <div class="loc-search-row">
+        <input type="search" id="loc-search" placeholder="搜索地名/店铺,如:橘子洲" autocomplete="off" enterkeyhint="search">
+        <button type="button" id="btn-loc-current" class="btn-small">📍 定位</button>
+      </div>
+      <div id="loc-results" class="loc-results"></div>
+      <div id="loc-map" class="loc-map"></div>
+      <div id="loc-nearby" class="loc-nearby" hidden></div>
+      <p id="loc-status" class="form-status"></p>
+      <div id="loc-confirm" class="loc-confirm" hidden>
+        <span id="loc-confirm-name" class="loc-confirm-name"></span>
+        <button type="button" id="btn-loc-done" class="btn-small">确定选这个点</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="api.js?v=20260818f"></script>
+  <script src="loc-picker.js?v=20260818f"></script>
+  <script src="entry-modal.js?v=20260818f"></script>
+  <script src="app.js?v=20260818f"></script>
+</body>
+</html>
