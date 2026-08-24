@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长沙2026 · 咕咕嘎嘎</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https://*.is.autonavi.com https://cdn.jsdelivr.net https://gugugaga-viw.pages.dev; connect-src 'self' https://cdn.jsdelivr.net https://gugugaga-viw.pages.dev; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; color: #1f2937; background: #f5f5f7; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+  header { background: #111827; color: #fff; padding: 18px 16px; }
+  header h1 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+  header .sub { font-size: 0.8rem; color: #9ca3af; margin-top: 4px; }
+  #map { height: 240px; border-radius: 10px; margin: 12px 0; z-index: 0; }
+  .date-head { font-weight: 700; font-size: 0.9rem; margin: 16px 0 6px; display: flex; align-items: center; gap: 8px; }
+  .date-head::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+  .item { background: #fff; border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .item .meta { font-size: 0.75rem; color: #6b7280; margin-bottom: 4px; }
+  .item .title { font-weight: 600; font-size: 1rem; }
+  .item .text { font-size: 0.9rem; color: #374151; margin-top: 6px; white-space: pre-wrap; }
+  .photos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .photos img { width: 96px; height: 96px; object-fit: cover; border-radius: 8px; cursor: zoom-in; }
+  #gg-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); display: none; align-items: center; justify-content: center; z-index: 9999; cursor: zoom-out; }
+  #gg-lightbox:not([hidden]) { display: flex; }
+  #gg-lightbox img { max-width: 94vw; max-height: 94vh; border-radius: 6px; }
+  footer { text-align: center; color: #9ca3af; font-size: 0.75rem; padding: 20px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>长沙2026</h1>
+  <div class="sub">咕咕嘎嘎 · 共 27 条</div>
+</header>
+<div class="wrap">
+  <div id="map"></div>
+  
+    <div class="date-head">2026-08-14</div>
+    
+      <div class="item">
+        <div class="meta">14:54 · 小红 · 公开 · 长沙2026 · 📍 江榕路</div>
+        <div class="title">打卡:长沙南站打卡</div>
+        <div class="text">到了！！</div>
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786719274395-3.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">03:18 · 小红 · 公开 · 长沙2026 · 📍 第一师范</div>
+        <div class="title">打卡:第一师范湖南</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786763888025-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786763888025-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">05:00 · 小红 · 公开 · 长沙2026 · 📍 丹丹热卤</div>
+        <div class="title">打卡:冬瓜山夜市</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-4.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-5-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-5.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-6-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-6.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-7-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-7.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-8-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-8.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-9-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-9.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-12-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-12.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-14-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-14.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-15-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-14/1786770055160-15.jpg" loading="lazy" alt="照片"></div>
+      </div>
+  
+    <div class="date-head">2026-08-15</div>
+    
+      <div class="item">
+        <div class="meta">04:58 · 小红 · 公开 · 长沙2026 · 📍 潮宗街</div>
+        <div class="title">打卡:古德莫宁奶茶喝喝</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786769883838-3.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">05:16 · 小红 · 公开 · 长沙2026 · 📍 鲁哥饭店(北正街店)</div>
+        <div class="title">打卡:鑫宇集合</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786771010283-3.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">06:38 · 小红 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道橘子洲·青莲(地铁站)橘子洲风景名胜区观光车停车场</div>
+        <div class="title">打卡:橘子洲头</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786775884426-4.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">06:53 · 小红 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道茶颜悦色(橘子洲美食文创馆店)橘子洲头</div>
+        <div class="title">打卡:茶颜悦色</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786776780520-4.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">07:02 · 球 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道《沁园春·长沙》新诗词碑橘子洲头</div>
+        <div class="title">沁园春毛体</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786777374283-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786777374283-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786777374283-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786777374283-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">08:47 · 小红 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道橘洲路毛泽东青年艺术雕塑</div>
+        <div class="title">打卡:头碑</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-4.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-5-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-5.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-6-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-6.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-7-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-7.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-8-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-8.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-9-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786783652309-9.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">10:30 · 小红 · 公开 · 长沙2026 · 📍 湖南省长沙市天心区坡子街街道不了锅火锅黄兴南路步行商业街</div>
+        <div class="title">打卡:炊烟小炒黄牛肉</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786789826241-4.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">12:23 · 小红 · 公开 · 长沙2026 · 📍 坡子街美食城</div>
+        <div class="title">打卡:网红公安局</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786796633637-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786796633637-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">12:29 · 小红 · 公开 · 长沙2026 · 📍 人民西路辅路</div>
+        <div class="title">打卡:太平老街</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786796972197-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786796972197-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">12:35 · 球 · 公开 · 长沙2026 · 📍 湖南省长沙市天心区坡子街街道太平街太平老街历史文化街区</div>
+        <div class="title">黑色经典</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786797313292-3.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:05 · 球 · 公开 · 长沙2026 · 📍 吃湘喝辣(五一广场店)</div>
+        <div class="title">打卡:恬恬集合</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786806323682-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786806323682-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786806323682-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786806323682-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:33 · 球 · 公开 · 长沙2026 · 📍 橘子洲头</div>
+        <div class="title">热烈庆祝《中华人民共和国生态环境法典》与8.15正式施行</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808006728-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808006728-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808006728-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808006728-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:35 · 球 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道橘洲路橘子洲头</div>
+        <div class="title">橘子洲鸟图</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808110562-2.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:36 · 球 · 公开 · 长沙2026 · 📍 湖南省长沙市岳麓区桔子洲街道长沙市橘子洲公园管理处橘子洲头</div>
+        <div class="title">打广告时间</div>
+        <div class="text">长沙水和橘子洲桔子汁给我打钱</div>
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808206519-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808206519-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808206519-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808206519-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:45 · 球 · 公开 · 长沙2026</div>
+        <div class="title">火宫殿</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808713607-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808713607-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808713607-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808713607-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">15:46 · 球 · 公开 · 长沙2026 · 📍 五一广场</div>
+        <div class="title">是魔法！我用了降温魔法！</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808814189-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786808814189-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">16:10 · 小红 · 公开 · 长沙2026 · 📍 白沙路</div>
+        <div class="title">打卡:五一广场</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-4.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-5-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-5.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-6-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-15/1786810221753-6.jpg" loading="lazy" alt="照片"></div>
+      </div>
+  
+    <div class="date-head">2026-08-16</div>
+    
+      <div class="item">
+        <div class="meta">02:17 · 球 · 公开 · 长沙2026 · 📍 湖南省长沙市天心区坡子街街道怡长街中山国际大厦</div>
+        <div class="title">打卡:嗦粉</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786846674895-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786846674895-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786846674895-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786846674895-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">02:47 · 球 · 公开 · 长沙2026</div>
+        <div class="title">长沙地铁</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786848429543-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786848429543-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">06:51 · 小红 · 公开 · 长沙2026 · 📍 茶酪酪·鲜酪果饮&amp;咖啡(岳麓山景区店)</div>
+        <div class="title">打卡:茶颜悦色</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786863113708-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786863113708-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786863113708-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786863113708-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">07:23 · 小红 · 公开 · 长沙2026 · 📍 半山亭服务点</div>
+        <div class="title">打卡:岳麓山</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-4.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-5-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-5.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-6-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-6.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-7-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-7.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-8-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-8.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-9-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-9.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-10-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786865013992-10.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">09:01 · 球 · 公开 · 长沙2026 · 📍 张氏父子常德肠子馆(岳麓山店)</div>
+        <div class="title">肠子馆</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-1.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-2-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-2.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-3-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-3.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-4-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786870890701-4.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">09:05 · 球 · 公开 · 长沙2026 · 📍 岳麓山</div>
+        <div class="title">爱晚亭</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786871123577-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786871123577-0.jpg" loading="lazy" alt="照片"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786871123577-1-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786871123577-1.jpg" loading="lazy" alt="照片"></div>
+      </div>
+      <div class="item">
+        <div class="meta">10:57 · 球 · 公开 · 长沙2026</div>
+        <div class="title">回家路上</div>
+        
+        <div class="photos"><img src="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786877826965-0-thumb.jpg" data-full="https://gugugaga-viw.pages.dev/photos/2026-08-16/1786877826965-0.jpg" loading="lazy" alt="照片"></div>
+      </div>
+  
+  
+  
+</div>
+<footer>由咕咕嘎嘎生成</footer>
+<div id="gg-lightbox" hidden><img id="gg-lightbox-img" alt="照片"></div>
+<script>
+(function () {
+  var pts = [{"lat":28.147334989606946,"lng":113.06893063181744,"t":"打卡:长沙南站打卡","d":"2026-08-14","h":"14:54"},{"lat":28.17666497500486,"lng":112.9716238275468,"t":"打卡:第一师范湖南","d":"2026-08-14","h":"03:18"},{"lat":28.16937153222507,"lng":112.97820229871326,"t":"打卡:冬瓜山夜市","d":"2026-08-14","h":"05:00"},{"lat":28.203100740617106,"lng":112.97361165252737,"t":"打卡:古德莫宁奶茶喝喝","d":"2026-08-15","h":"04:58"},{"lat":28.204946954745054,"lng":112.98243363676679,"t":"打卡:鑫宇集合","d":"2026-08-15","h":"05:16"},{"lat":28.191158,"lng":112.961945,"t":"打卡:茶颜悦色","d":"2026-08-15","h":"06:53"},{"lat":28.182179304151067,"lng":112.96126217336122,"t":"沁园春毛体","d":"2026-08-15","h":"07:02"},{"lat":28.16749391358516,"lng":112.96037413066512,"t":"打卡:头碑","d":"2026-08-15","h":"08:47"},{"lat":28.191183,"lng":112.976184,"t":"打卡:炊烟小炒黄牛肉","d":"2026-08-15","h":"10:30"},{"lat":28.190556,"lng":112.972787,"t":"打卡:网红公安局","d":"2026-08-15","h":"12:23"},{"lat":28.191911029268493,"lng":112.9715629463066,"t":"打卡:太平老街","d":"2026-08-15","h":"12:29"},{"lat":28.194496,"lng":112.975381,"t":"打卡:恬恬集合","d":"2026-08-15","h":"15:05"},{"lat":28.166695899021033,"lng":112.96030507497593,"t":"热烈庆祝《中华人民共和国生态环境法典》与8.15正式施行","d":"2026-08-15","h":"15:33"},{"lat":28.177190541786434,"lng":112.96169231740285,"t":"橘子洲鸟图","d":"2026-08-15","h":"15:35"},{"lat":28.170345388975775,"lng":112.9601344401927,"t":"打广告时间","d":"2026-08-15","h":"15:36"},{"lat":28.1985991,"lng":112.9709227,"t":"是魔法！我用了降温魔法！","d":"2026-08-15","h":"15:46"},{"lat":28.191247742962553,"lng":112.98151837184699,"t":"打卡:五一广场","d":"2026-08-15","h":"16:10"},{"lat":28.194233201526558,"lng":112.9755453707279,"t":"打卡:嗦粉","d":"2026-08-16","h":"02:17"},{"lat":28.187429,"lng":112.936474,"t":"打卡:茶颜悦色","d":"2026-08-16","h":"06:51"},{"lat":28.179717,"lng":112.935151,"t":"打卡:岳麓山","d":"2026-08-16","h":"07:23"},{"lat":28.1869583,"lng":112.9283216,"t":"爱晚亭","d":"2026-08-16","h":"09:05"}];
+  var box = document.getElementById('map');
+  if (!window.L || !pts.length) { if (box) box.style.display = 'none'; return; }
+  var map = L.map(box).setView([35, 105], 5);
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    maxZoom: 18,
+    subdomains: ['1', '2', '3', '4'],
+    attribution: '&copy; 高德地图',
+  }).addTo(map);
+  var marks = [];
+  pts.forEach(function (p) {
+    var mk = L.marker([p.lat, p.lng]).addTo(map);
+    mk.bindPopup('<b>' + p.d + (p.h ? ' ' + p.h : '') + '</b> ' + p.t);
+    marks.push(mk);
+  });
+  if (marks.length > 1) map.fitBounds(L.featureGroup(marks).getBounds(), { padding: [30, 30] });
+  else map.setView([pts[0].lat, pts[0].lng], 14);
+})();
+</script>
+<script>
+// 照片放大预览:点缩略图看大图,点遮罩关闭
+(function () {
+  var lb = document.getElementById('gg-lightbox');
+  var big = document.getElementById('gg-lightbox-img');
+  if (!lb || !big) return;
+  lb.addEventListener('click', function () { lb.hidden = true; });
+  document.querySelectorAll('.photos img').forEach(function (im) {
+    im.addEventListener('click', function () {
+      big.src = im.getAttribute('data-full') || im.src;
+      lb.hidden = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
