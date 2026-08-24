@@ -21,6 +21,8 @@
     '/export.html': 'https://gugugaga-viw.pages.dev/export.html'
   };
   if (map[path]) { location.replace(map[path]); return; }
+  // 旧版分享页(历史 /s/<token> 快照)→ 跳 pages.dev 渲染
+  if (path.indexOf('/s/') === 0) { location.replace('https://gugugaga-viw.pages.dev' + path); return; }
   document.title = '页面不存在 · 咕咕嘎嘎';
   document.write('<div style="font-family:-apple-system,\'PingFang SC\',sans-serif;text-align:center;padding:48px 16px;color:#1f2937">' +
     '<h2 style="font-weight:800">页面不存在</h2>' +
