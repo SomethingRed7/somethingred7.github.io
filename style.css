@@ -858,7 +858,8 @@ body {
   border-radius: 10px;
   background: var(--card, #fff);
 }
-.album-mgr-name { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.album-mgr-name { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: none; border: none; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.album-mgr-name:hover { color: var(--brand); text-decoration: underline; }
 .album-mgr-count { font-size: 0.8rem; color: var(--text-soft); white-space: nowrap; }
 .album-mgr-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .btn-album-rename {
@@ -1255,6 +1256,7 @@ body {
 }
 .share-qr { display: flex; justify-content: center; padding: 8px 0; }
 .share-qr canvas { border: 1px solid var(--line); border-radius: 8px; }
+.share-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
 
 /* ---------- 打印 ---------- */
 @media print {
@@ -1290,6 +1292,11 @@ body {
 .ex-todo { display: flex; gap: 6px; align-items: center; padding: 2px 0; }
 .ex-todo.done { color: var(--text-soft); text-decoration: line-through; }
 .ex-login { margin-bottom: 12px; font-size: 0.95rem; }
+/* 逐个条目/待办「导出」勾选(export 页) */
+.ex-toggle { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; user-select: none; color: var(--text-soft); }
+.ex-toggle input { cursor: pointer; }
+.ex-todo .ex-toggle { margin-left: auto; }
+.entry.ex-off, .ex-todo.ex-off { opacity: 0.5; }
 
 /* ---------- 底部 ---------- */
 .site-footer {
