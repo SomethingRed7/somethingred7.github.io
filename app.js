@@ -6,7 +6,6 @@ var $ = (s) => document.querySelector(s);
 let allEntries = [];
 let currentMonth = null;   // 'YYYY-MM'
 let selectedDate = null;
-let activeAlbum = null;
 let currentUser = null;    // 登录用户;null=未登录(待办完全不可见)
 
 // 只读门户(github.io):纯浏览,不渲染任何登录/管理入口(登录只在 pages.dev)
@@ -19,8 +18,6 @@ function todayStr() {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 let allTodos = [];         // 私有待办(仅登录后拉取)
-// 暂不显示「最近动态」流:默认只保留专辑入口;true = 恢复(含「全部」chip)
-const SHOW_RECENT_FEED = false;
 
 function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -158,10 +155,7 @@ function renderCalendar() {
 
 function selectDate(ds) {
   selectedDate = ds;
-  activeAlbum = null;
-  renderAlbums();
   renderCalendar();
-  renderStream(); // 专辑面板同步回占位态(否则残留上一次的专辑列表/地图)
   renderDayEntries(ds);
   renderDayTodos(ds);
 }
@@ -178,7 +172,6 @@ async function refreshAll() {
     renderDayEntries(selectedDate);
     renderDayTodos(selectedDate);
   }
-  renderStream();
 }
 
 /* 已登录:动态/流条目按钮(改公开/预览/编辑/删除,与管理界面一致) */
@@ -212,7 +205,7 @@ function bindStreamEditBtns(container) {
       fd.append('visibility', b.dataset.vis === 'private' ? 'public' : 'private');
       try {
         const res = await (await fetch('/api/update', { method: 'POST', body: fd })).json();
-        if (res.ok) renderStream();
+        if (res.ok) { renderDayEntries(b.dataset.date); renderCalendar(); }
         else alert(res.error || '切换失败');
       } catch { alert('网络异常,请重试'); }
     });
@@ -252,7 +245,6 @@ function bindStreamEditBtns(container) {
         }
         // 本地同步移除
         allEntries = allEntries.filter((x) => !(x.date === b.dataset.date && String(x.ts) === String(b.dataset.ts)));
-        renderStream();
         if (selectedDate) renderDayEntries(selectedDate);
         renderCalendar();
         alert('已删除 ✅');
@@ -261,24 +253,16 @@ function bindStreamEditBtns(container) {
   });
 }
 
-/* 预览弹层(与管理界面同款);地图打卡点点击复用 */
-function openEntryCard(e) {
-  $('#preview-body').innerHTML = `<div class="preview-date">${esc(e.date)}</div>` + entryCard(e);
-  $('#preview-modal').hidden = false;
-  bindPhotoGridFallback($('#preview-body'));
-  $('#preview-body').querySelectorAll('.photo-grid img').forEach((img) => {
-    img.addEventListener('click', () => window.open(img.dataset.full || img.src, '_blank'));
-  });
-}
-
+/* 预览弹层:地图打卡点 + 动态流「预览」按钮共用(map-common.openEntryCard,文字+图片,lightbox) */
 async function openStreamPreview(date, ts) {
   const data = await (await fetch(`/api/entries?date=${date}`)).json();
   const e = (data.entries || []).find((x) => String(x.ts) === String(ts));
   if (!e) return alert('条目不存在');
-  openEntryCard(e);
+  MapCommon.openEntryCard(e);
 }
-$('#btn-preview-close').addEventListener('click', () => { $('#preview-modal').hidden = true; });
-$('#preview-modal').addEventListener('click', (e) => { if (e.target.id === 'preview-modal') $('#preview-modal').hidden = true; });
+
+/* 详情弹层关闭(关闭按钮 + 点遮罩),与分享页/导出页共用 map-common.bindPreviewModal */
+MapCommon.bindPreviewModal();
 
 function renderDayEntries(ds) {
   const dayEntries = allEntries
@@ -305,10 +289,8 @@ async function initPortalUser() {
     box.hidden = false;
     // 登录态:用户名 + 管理按钮(btn-write 样式,同原「写日记」入口)
     box.innerHTML = `<span class="user-name">${esc(currentUser)}</span><a class="btn-write" href="/write">管理</a>`;
-    const albumTab = document.querySelector('#panel-tabs .tab-btn[data-tab="album"]');
-    if (albumTab) albumTab.hidden = false; // 专辑 tab 仅登录可见
     const tabsBar = $('#panel-tabs');
-    if (tabsBar) tabsBar.hidden = false;   // 三 tab 面板仅登录可见(未登录无待办可看)
+    if (tabsBar) tabsBar.hidden = false;   // tab 面板仅登录可见(未登录无待办可看)
     // 当日动态「记一把」按钮(登录可见;点击打开日记弹窗,不跳转写日记页)
     const addBtn = $('#btn-entry-add');
     if (addBtn) {
@@ -325,7 +307,6 @@ async function initPortalUser() {
     renderCalendar();
     if (selectedDate) { renderDayTodos(selectedDate); }
     if (selectedDate) renderDayEntries(selectedDate); // 登录后刷新动态(带编辑按钮)
-    renderStream(); // 最近动态流同步刷新
   } else {
     // 未登录
     if (READONLY_PORTAL) {
@@ -337,41 +318,25 @@ async function initPortalUser() {
       // 仅 pages.dev 显示醒目「登录」按钮(btn-write 样式)
       box.innerHTML = '<a class="btn-write" href="/write">登录</a>';
     }
-    const albumTab = document.querySelector('#panel-tabs .tab-btn[data-tab="album"]');
-    if (albumTab) albumTab.hidden = true; // 未登录无专辑
     const tabsBar2 = $('#panel-tabs');
-    if (tabsBar2) tabsBar2.hidden = true; // 未登录无 tab 栏:不显示「当日待办」,默认只展示当日动态
+    if (tabsBar2) tabsBar2.hidden = true; // 未登录无 tab 栏:默认只展示当日动态
     const addBtn2 = $('#btn-entry-add');
     if (addBtn2) addBtn2.hidden = true;
     if (activeTab === 'todos') switchTab('entries'); // 未登录默认动态
   }
 }
 
-/* ---------- 面板 Tab 切换(当日待办/当日动态/专辑查看) ---------- */
-let activeTab = 'todos'; // 默认当日待办
+/* ---------- 面板 Tab 切换(当日动态/当日待办) ---------- */
+let activeTab = 'entries'; // 默认当日动态
 function switchTab(tab) {
   activeTab = tab;
   document.querySelectorAll('#panel-tabs .tab-btn').forEach((b) => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
-  ['todos', 'entries', 'album'].forEach((t) => {
+  ['todos', 'entries'].forEach((t) => {
     const pane = $('#tab-' + t);
     if (pane) pane.hidden = t !== tab;
   });
-  if (tab === 'album') {
-    // 切到专辑:地图容器刚显示,需校正尺寸
-    const box = $('#album-map');
-    if (box && albumMap && box.style.display !== 'none') {
-      setTimeout(() => albumMap.invalidateSize(), 150);
-    }
-    // 未选专辑时默认选第一个(专辑 tab 打开即有内容)
-    if (activeAlbum === null) {
-      const albums = [...new Set(allEntries.map((e) => e.album).filter(Boolean))];
-      if (albums.length) { activeAlbum = albums[0]; }
-    }
-    renderAlbums();
-    renderStream();
-  }
   if (tab === 'todos' && selectedDate) renderDayTodos(selectedDate);
   if (tab === 'entries' && selectedDate) renderDayEntries(selectedDate);
 }
@@ -1201,154 +1166,6 @@ function openCkinMap() {
   });
 }
 
-/* ---------- 专辑地图(Leaflet + 高德瓦片,懒加载) ---------- */
-let albumMap = null;
-
-/* 条目时间戳:优先 ts 字段,退化为从照片路径提取 */
-function entryTs(e) {
-  if (e.ts) return String(e.ts);
-  if (e.photos && e.photos[0]) {
-    const m = e.photos[0].match(/([0-9]{13})-[0-9]+\.jpg$/);
-    if (m) return m[1];
-  }
-  return '0';
-}
-
-async function renderAlbumMap(list) {
-  const box = $('#album-map');
-  const withLoc = list.filter((e) => e.location && e.location.lat != null && e.location.lng != null);
-  if (!withLoc.length) {
-    box.style.display = 'none';
-    return;
-  }
-  box.style.display = 'block';
-  try {
-    await loadLeaflet();
-  } catch {
-    box.style.display = 'none';
-    return;
-  }
-  if (albumMap) albumMap.remove();
-  const map = L.map('album-map', { scrollWheelZoom: true, zoomControl: true });
-  albumMap = map;
-  // 容器从 display:none 切到显示后立即初始化会尺寸错位 → 延时校正(瓦片偏移/突出根因)
-  setTimeout(() => map.invalidateSize(), 120);
-  setTimeout(() => map.invalidateSize(), 400);
-  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-    maxZoom: 18,
-    subdomains: ['1', '2', '3', '4'],
-    attribution: '&copy; 高德地图',
-  }).addTo(map);
-  // 右上角全屏查看按钮(铺满视口 + 自动 fit 所有打卡点)
-  LocPicker.lpMapFullscreen(map, box);
-  const bounds = [];
-  for (const e of withLoc) {
-    const mk = L.marker([e.location.lat, e.location.lng], { icon: L.divIcon({ className: 'gg-marker', html: ggPinSvg(), iconSize: [28, 28], iconAnchor: [14, 27] }) }).addTo(map);
-    // 点打卡点 → 打开详情弹层(含文字 + 照片,可点开大图)
-    mk.on('click', () => openEntryCard(e));
-    bounds.push([e.location.lat, e.location.lng]);
-  }
-  if (bounds.length === 1) {
-    map.setView(bounds[0], 12);
-  } else if (bounds.length > 1) {
-    // 路线三级:driving → walking → 直线
-    // ⚠️ driving 在步行景区(橘子洲)会把点吸附到远处驾车路 → 检测到某点偏离>200m 即不合格
-    const ordered = withLoc.slice().sort((a, b) => {
-      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-      return (entryTs(a) || 0) - (entryTs(b) || 0);
-    });
-    const line = await getRouteLine(ordered);
-    // 轨迹线:品牌红醒目
-    L.polyline(line, { color: '#e11d48', weight: 4, opacity: 0.9 }).addTo(map);
-    map.fitBounds(line, { padding: [30, 30] });
-  }
-}
-
-/* ---------- 专辑 / 动态流 ---------- */
-function renderAlbums() {
-  const albums = [...new Set(allEntries.map((e) => e.album).filter(Boolean))];
-  const hasUncat = allEntries.some((e) => !e.album); // 未分类:album 为空/NULL 的条目
-  const chips = $('#album-chips');
-  chips.innerHTML = '';
-  const mk = (label, album, active) => {
-    const b = document.createElement('button');
-    b.className = 'chip' + (active ? ' active' : '');
-    b.textContent = label;
-    // 反选:再点已选中的专辑 → 收起详情(置空回占位态)
-    b.addEventListener('click', () => setAlbum(activeAlbum === album ? null : album));
-    chips.appendChild(b);
-  };
-  if (SHOW_RECENT_FEED) mk('全部', null, activeAlbum === null);
-  for (const a of albums) mk(a, a, activeAlbum === a);
-  if (hasUncat) mk('未分类', '', activeAlbum === '');
-}
-
-function setAlbum(album) {
-  activeAlbum = album;
-  renderAlbums();
-  renderStream();
-}
-
-async function renderStream() {
-  // 专辑「生成分享页」按钮(与当日动态「记一把」同款):选中专辑时显示,链接带当前专辑;未选专辑隐藏
-  const shareBtn = $('#btn-album-share');
-  if (shareBtn) {
-    shareBtn.hidden = !(activeAlbum && currentUser);
-    if (activeAlbum) shareBtn.href = '/export?album=' + encodeURIComponent(activeAlbum);
-  }
-  let list = allEntries;
-  if (activeAlbum === '') list = list.filter((e) => !e.album); // 未分类:album 为空/NULL
-  else if (activeAlbum) list = list.filter((e) => e.album === activeAlbum);
-  if (activeAlbum == null && !SHOW_RECENT_FEED) {
-    // 专辑入口:默认不渲染动态流
-    $('#stream-title').textContent = '专辑';
-    $('#stream').innerHTML = `<p class="empty">${allEntries.length ? '选择一个专辑查看' : '还没有日记 ✏️'}</p>`;
-    $('#album-map').style.display = 'none';
-    return;
-  }
-  list = [...list].sort((a, b) => {
-    if (activeAlbum != null) return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; // 专辑/未分类正序
-    if (a.date !== b.date) return a.date > b.date ? -1 : 1;                 // 动态倒序
-    return (a.created_at || '') > (b.created_at || '') ? -1 : 1;
-  });
-  $('#stream-title').textContent = activeAlbum === '' ? '专辑 · 未分类' : activeAlbum ? `专辑 · ${activeAlbum}` : '最近动态';
-  // 条目按日期分组:每日小标题 + 当日条目(样式与管理界面一致)
-  const grouped = [];
-  const byDate = {};
-  for (const e of list.slice(0, 60)) {
-    (byDate[e.date] = byDate[e.date] || []).push(e);
-  }
-  for (const date of Object.keys(byDate).sort().reverse()) grouped.push({ date, items: byDate[date] });
-  $('#stream').innerHTML = grouped.length
-    ? grouped.map((g) => `
-      <div class="stream-date-head">${esc(g.date)}</div>
-      ${g.items.map((e) => {
-        const visTag = e.visibility === 'private' ? '<span class="vis-tag">私有</span>' : '';
-        const visBtn = currentUser
-          ? `<button type="button" class="btn-small btn-vis" data-date="${esc(e.date)}" data-ts="${esc(e.ts)}" data-vis="${e.visibility === 'private' ? 'private' : 'public'}">${e.visibility === 'private' ? '改公开' : '改私有'}</button>`
-          : '';
-        const prevBtn = currentUser
-          ? `<button type="button" class="btn-small btn-prev" data-date="${esc(e.date)}" data-ts="${esc(e.ts)}">预览</button>`
-          : '';
-        const editBtn = currentUser
-          ? `<button type="button" class="btn-small btn-edit" data-date="${esc(e.date)}" data-ts="${esc(e.ts)}">编辑</button>`
-          : '';
-        const delBtn = currentUser
-          ? `<button type="button" class="btn-small btn-del" data-date="${esc(e.date)}" data-ts="${esc(e.ts)}">删除</button>`
-          : '';
-        return `<div class="recent-item">
-          <span class="recent-info">${esc(e.date)} <span class="time-tag">${fmtTime(e.ts)}</span> ${visTag} <b>${esc(e.title || '')}</b>${e.author ? ` · ${esc(e.author)}` : ''}</span>
-          <span class="recent-actions">${visBtn}${prevBtn}${editBtn}${delBtn}</span>
-        </div>`;
-      }).join('')}
-    `).join('')
-    : '<p class="empty">还没有日记 ✏️</p>';
-  bindStreamEditBtns($('#stream'));
-  // 地图仅在选中专辑/未分类时显示(未分类条目有坐标同样画)
-  if (activeAlbum != null) await renderAlbumMap(list);
-  else $('#album-map').style.display = 'none';
-}
-
 /* ---------- 大图 ---------- */
 function setupLightbox() {
   const lb = document.getElementById('lightbox');
@@ -1385,8 +1202,6 @@ async function init() {
   });
   initCalendar();
   initTabs();
-  renderAlbums();
-  renderStream();
   initPortalUser(); // 探测登录态 + 拉私有待办(待办橙点/待办区仅登录可见)
 
   const now = new Date();
@@ -1408,5 +1223,5 @@ async function init() {
 
 init().catch((err) => {
   console.error(err);
-  $('#stream').innerHTML = `<p class="empty">加载失败:${esc(err.message)}</p>`;
+  $('#day-entries').innerHTML = `<p class="empty">加载失败:${esc(err.message)}</p>`;
 });
