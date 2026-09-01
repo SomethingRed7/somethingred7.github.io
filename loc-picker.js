@@ -285,19 +285,24 @@ function setPoint(lat, lng, name) {
   $('#loc-status').textContent = (lat != null && lng != null)
     ? `坐标 ${lat.toFixed(5)}, ${lng.toFixed(5)}`
     : '仅名称(无坐标,不上地图)';
-  if (lat != null && lng != null) reverseNearby(lat, lng); // 有坐标才反查;否则跳过
+  // 仅名字未知(点地图/拖图钉)才反查;搜索/推荐点选名字已知,反查会重拉 nearby 并覆盖整个列表
+  // (用户点一个推荐,其他推荐却跟着变 —— 2026-08-31 bug 修复)
+  if (lat != null && lng != null && !name) reverseNearby(lat, lng);
 }
 
 /* 反查地名 + 附近地点:服务端 /api/geocode(高德 regeo+around 优先,失败 Nominatim+Overpass);
  * 浏览器兜底链:localStorage 缓存(同坐标秒回,避开公开服务限流)→ Photon → Nominatim(zoom 18/10, addressdetails=1)
  * Nominatim 优先从 address 子对象选最有意义的命名要素(比 display_name 可靠) */
-const _ggGeoCache = (() => { try { return JSON.parse(localStorage.getItem('gg_geocode') || '{}'); } catch { return {}; } })();
+/* localStorage 缓存(同坐标秒回,避开反复调用公开服务被限流)
+ * v2:schema 变更(主名改用最近 POI 覆盖路名)— 老缓存可能存的是 road 名,直接废 */
+const _ggGeoCacheVer = 'v2';
+const _ggGeoCache = (() => { try { const r = JSON.parse(localStorage.getItem('gg_geocode') || '{}'); return (r && r.__v === _ggGeoCacheVer) ? (r.data || {}) : {}; } catch { return {}; } })();
 const _ggGeoKey = (la, ln) => (Math.round(la * 1e4) / 1e4) + ',' + (Math.round(ln * 1e4) / 1e4); // ~11m
 function _ggGeoGet(la, ln) { const e = _ggGeoCache[_ggGeoKey(la, ln)]; return e && (Date.now() - e.t) < 7 * 86400e3 ? e.n : null; }
 function _ggGeoPut(la, ln, name) {
   if (!name) return;
   _ggGeoCache[_ggGeoKey(la, ln)] = { n: name, t: Date.now() };
-  try { localStorage.setItem('gg_geocode', JSON.stringify(_ggGeoCache)); } catch { /* 满 */ }
+  try { localStorage.setItem('gg_geocode', JSON.stringify({ __v: _ggGeoCacheVer, data: _ggGeoCache })); } catch { /* 满 */ }
 }
 async function reverseNearby(lat, lng) {
   const st = $('#loc-status');
@@ -322,9 +327,9 @@ async function reverseNearby(lat, lng) {
       $('#loc-confirm-name').textContent = res.name;
       gotName = true;
     }
-    // crs: 'gcj'=高德(已是 GCJ-02 勿转);'wgs'=Overpass(WGS-84 需转 GCJ-02 才对得上高德瓦片)
+    // crs: 'gcj'=高德(已是 GCJ-02 勿转);'wgs'=OSM/Photon(WGS-84,仅中国境内转 GCJ-02 才对得上瓦片,海外原样)
     const nearby = ((res && res.nearby) || []).map((n) => {
-      const p = n.crs === 'wgs' ? wgs2gcj(n.lat, n.lng) : { lat: n.lat, lng: n.lng };
+      const p = n.crs === 'wgs' ? fromWgs(n.lat, n.lng) : { lat: n.lat, lng: n.lng };
       return { name: n.name, lat: p.lat, lng: p.lng };
     }).slice(0, 12);
     const nb = $('#loc-nearby');
@@ -389,8 +394,9 @@ async function reverseNearby(lat, lng) {
   }
   if (gotName && picked.name) _ggGeoPut(lat, lng, picked.name);
   st.textContent = `坐标 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-  // 附近店/点(Overpass 直连浏览器,CORS 友好,选点后秒出 8 个 POI,点一个用它的名字+精确坐标)
-  loadNearbyPois(lat, lng);
+  // 附近店/点:服务端 /api/geocode 已带 nearby 时不再二次 Overpass(海外/限流更稳);
+  // 服务端 nearby 空(限流/超时)才用浏览器直连 Overpass 兜底
+  if (!nearby.length) loadNearbyPois(lat, lng);
 }
 
 /* 附近 POI(Overpass,OSM shop/amenity/tourism) — 浏览器直连,海外用户服务端被限时的兜底 */
@@ -508,8 +514,8 @@ async function serverSearch(q) {
     const res = await (await fetch(`/api/geocode?q=${encodeURIComponent(q)}${cityQ}`, { signal: ctrl.signal })).json();
     clearTimeout(timer);
     const results = (res.results || []).map((r) => {
-      // crs:'gcj'=高德结果已是 GCJ-02 勿转;无 crs=Nominatim(WGS-84)需转,否则偏 1.4km
-      const g = r.crs === 'gcj' ? { lat: r.lat, lng: r.lng } : wgs2gcj(r.lat, r.lng);
+      // crs:'gcj'=高德结果已是 GCJ-02 勿转;无 crs=Nominatim(WGS-84):仅中国境内转 GCJ-02,海外原样(否则 NZ 等偏 1.4km)
+      const g = r.crs === 'gcj' ? { lat: r.lat, lng: r.lng } : fromWgs(r.lat, r.lng);
       return { name: r.name, lat: g.lat, lng: g.lng };
     });
     renderLocResults(results);
@@ -548,7 +554,7 @@ function locateCurrent() {
           const r = res.results && res.results[0];
           if (r) $('#loc-confirm-name').textContent = r.name;
           renderNearbyChips(((r && r.nearby) || []).map((n) => {
-            const p = n.crs === 'wgs' ? wgs2gcj(n.lat, n.lng) : { lat: n.lat, lng: n.lng };
+            const p = n.crs === 'wgs' ? fromWgs(n.lat, n.lng) : { lat: n.lat, lng: n.lng };
             return { name: n.name, lat: p.lat, lng: p.lng };
           }));
         } catch { /* 保持当前位置 */ }
