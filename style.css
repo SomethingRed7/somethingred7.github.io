@@ -130,6 +130,16 @@ body {
   padding: 16px 20px 40px;
 }
 
+/* 登录后 #login-panel 被 hidden,桌面两列网格仍留位 → #editor-area 落到窄的 4fr 列
+ * (1080px 下仅 341px,右侧 683px 空着,管理列表/写日记表单都被挤扁)。
+ * 跨两列铺满后按站点 640 内容宽居中(与 .manage-panel/.modal-card 同宽)(2026-09-10) */
+#editor-area {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
 .panel {
   background: var(--card);
   border-radius: var(--radius);
@@ -570,6 +580,105 @@ body {
 }
 .album-map .leaflet-container { font: inherit; width: 100%; }
 
+/* 地图打卡点聚合:屏幕距离 <44px 的点合成一个(用户反馈密集处单点戳不中)。
+ * 圆形 + 数字比图钉更醒目,点开列出该处全部打卡 */
+.gg-cluster {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #e11d48;
+  color: #fff;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, .35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 聚合点列表抽屉:手机上贴底(拇指够得着),桌面居中卡片 */
+.gg-sheet {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  z-index: 10001; /* 高于地图全屏遮罩 9999 与详情面板 10000 */
+  width: 100%;
+  max-width: 560px;
+  max-height: 58vh;
+  overflow: auto;
+  background: #fff;
+  color: var(--text);
+  border-radius: 14px 14px 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, .22);
+  padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  font-size: 0.9rem;
+}
+.gg-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.gg-sheet-title { font-weight: 600; }
+.gg-sheet-close {
+  border: none;
+  background: none;
+  color: #9ca3af;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0 4px;
+  cursor: pointer;
+}
+.gg-sheet-list { display: flex; flex-direction: column; gap: 6px; }
+.gg-sheet-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.gg-sheet-row:active { background: #f9fafb; }
+.gg-sheet-row-main { font-weight: 600; }
+.gg-sheet-row-sub { font-size: 0.78rem; color: var(--text-soft); }
+
+@media (min-width: 900px) {
+  /* 桌面不需要贴底:居中卡片,别挡住整条地图底边 */
+  .gg-sheet { bottom: 24px; max-width: 440px; border-radius: 14px; }
+}
+
+/* 打卡点详情面板:屏幕居中卡片(旧版锚在地图右上角,手机上偏右又贴顶)。
+ * 内容超高时面板内部滚动,不撑破视口;dvh 防止手机地址栏收起时超出可视区 */
+.map-detail-panel {
+  position: fixed;
+  z-index: 10000;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 32px));
+  max-height: 84vh;
+  max-height: 84dvh;
+  overflow: auto;
+  background: #fff;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, .28);
+  padding: 12px 14px;
+  font-size: 0.9rem;
+}
+
 /* 地图全屏查看(专辑/导出/快照三处共用):右上角 ⛶ 按钮 + 全屏遮罩 */
 .map-fs-btn {
   position: absolute; top: 10px; right: 10px; z-index: 1000;
@@ -581,13 +690,21 @@ body {
 .map-fs-btn:hover { color: var(--brand); }
 .map-fs-overlay {
   position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9999; background: #fff;
-  display: flex; flex-direction: column;
 }
+/* 退出按钮直接浮在地图上,不再占一整条白条 → 地图铺满全屏(用户 2026-09-11 反馈)。
+ * pointer-events:none 让这块区域不挡地图,只有按钮本身可点 */
 .map-fs-head {
-  display: flex; justify-content: flex-end; padding: 10px 14px;
-  background: #fff; border-bottom: 1px solid var(--line);
+  position: absolute; top: calc(10px + env(safe-area-inset-top, 0px)); right: 10px; z-index: 1000;
+  pointer-events: none;
 }
-.map-fs-body { flex: 1; position: relative; min-height: 0; }
+.map-fs-exit {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, .92);
+  border: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+  color: #374151;
+}
+.map-fs-body { position: absolute; top: 0; right: 0; bottom: 0; left: 0; }
 
 /* 移动端适配(≤600px):主按钮全宽大点击区 + 输入字号≥16px 防 iOS 聚焦自动缩放 */
 @media (max-width: 600px) {
@@ -847,26 +964,54 @@ body {
 .mgr-pager { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .mgr-pager span { font-size: 0.85rem; color: var(--text-soft); white-space: nowrap; }
 
-/* 管理条目批量操作(勾选 → 一键选专辑) */
+/* 管理条目批量操作(勾选 → 一键选专辑)
+ * 单行不换行:手机窄屏下 4 个控件换行会占掉一整屏(2026-09-10)
+ * 全选/计数在左,主操作在右,取消收成 ✕ 图标省宽度 */
 .mgr-batch-bar {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px 12px;
-  padding: 8px 12px;
+  gap: 8px;
+  padding: 7px 10px;
   margin: 0 0 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--brand-soft, #fef3c7);
   font-size: 0.85rem;
 }
-.mgr-sel-all { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text); }
+.mgr-sel-all { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text); flex-shrink: 0; }
 .mgr-sel-all input,
 .recent-check input { width: 16px; height: 16px; accent-color: var(--brand); cursor: pointer; }
-#mgr-sel-count { color: var(--text-soft); white-space: nowrap; }
+/* 计数占据剩余空间,极窄屏下省略号,绝不挤掉右侧按钮 */
+#mgr-sel-count {
+  color: var(--text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+/* 主操作:实心主色,与「写日记」按钮同款(唯一视觉重心) */
+#btn-batch-album {
+  flex-shrink: 0;
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+#btn-batch-album:active { opacity: 0.85; }
+/* 取消:图标化,保 32px 触控区 */
+#btn-batch-clear {
+  flex-shrink: 0;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 6px 8px;
+  line-height: 1;
+}
 
 .recent-check { display: inline-flex; align-items: center; flex-shrink: 0; cursor: pointer; }
-.mgr-item .recent-info { flex: 1; min-width: 0; }
+/* basis 用 auto(不是 0):手机窄屏下按钮组很宽,若 basis=0 会把文字挤成几 px;
+ * auto 让文字以内容为基准占满第一行,按钮自然换行到第二行 */
+.mgr-item .recent-info { flex: 1 1 auto; min-width: 0; }
 
 /* 批量选专辑弹层 */
 .batch-album-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 28vh; overflow: auto; }
