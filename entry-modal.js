@@ -16,25 +16,7 @@ function esc(s) {
 
 function emThumbUrl(p) { return p.replace(/\.(jpg|jpeg|png)$/i, '-thumb.$1'); }
 
-/* 图片压缩(与写日记页同款:canvas 等比缩放 + JPEG) */
-function emCompressImage(file, maxLen, quality) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      const scale = Math.min(1, maxLen / Math.max(img.width, img.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.max(1, Math.round(img.width * scale));
-      canvas.height = Math.max(1, Math.round(img.height * scale));
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      URL.revokeObjectURL(url);
-      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
-    img.src = url;
-  });
-}
+/* 图片压缩走 photo.js 的共享实现(解码一次出 full+thumb,带超时兜底) */
 
 /* 弹窗状态 */
 let emState = { entry: null, removedPaths: [], lat: null, lng: null, files: [] };
@@ -186,15 +168,38 @@ function emOpenMap() {
   });
 }
 
-/* 新照片预览(打卡同款虚线框 + 方形缩略图) */
+/* 新照片预览:渲染的是 emState.files(累积暂存),不是 input 的 FileList。
+ * ⚠️ 原生 file input 每次选择都会**覆盖** FileList,若直接读 input,
+ * 「再选一次追加照片」会把上一次选的顶掉(用户 2026-09-15 反馈「已选择的没了」) */
 function emRenderNewPhotos() {
   const box = $('#em-new-preview');
-  const files = [...$('#em-files').files];
-  if (!files.length) { box.hidden = true; box.innerHTML = ''; return; }
+  if (!emState.files.length) { box.hidden = true; box.innerHTML = ''; return; }
   box.hidden = false;
-  box.innerHTML = files
-    .map((f, i) => `<div class="preview-item"><img src="${URL.createObjectURL(f)}" alt="预览 ${i + 1}"></div>`)
+  box.innerHTML = emState.files
+    .map((f, i) => `<div class="preview-item"><img src="${URL.createObjectURL(f)}" alt="预览 ${i + 1}">`
+      + `<button type="button" class="preview-x" data-i="${i}" title="移除这张">✕</button></div>`)
     .join('');
+  box.querySelectorAll('.preview-x').forEach((b) => {
+    b.addEventListener('click', () => {
+      emState.files.splice(Number(b.dataset.i), 1);
+      emRenderNewPhotos();
+    });
+  });
+}
+
+/* input 的 change:把本次选中的**追加**进 emState.files,并立即清空 input
+ * (清空后同一批文件再选一次也会触发 change,且不会重复累加) */
+function emAddPickedPhotos() {
+  const input = $('#em-files');
+  const picked = [...input.files];
+  input.value = '';
+  if (!picked.length) return;
+  const keptOld = $('#em-existing').querySelectorAll('.ckin-old:not(.removed)').length;
+  const room = 20 - keptOld - emState.files.length;
+  if (room <= 0) return emSetStatus('最多 20 张照片', true);
+  emState.files = emState.files.concat(picked.slice(0, room));
+  if (picked.length > room) emSetStatus(`最多 20 张照片,只加了前 ${room} 张`, true);
+  emRenderNewPhotos();
 }
 
 /* 保存:新建 → /api/upload;编辑 → /api/update */
@@ -207,7 +212,7 @@ async function emSave() {
   const albumRaw = $('#em-album').value;
   const vis = $('#em-vis').value;
   const location = $('#em-loc').value.trim() || null;
-  const files = [...$('#em-files').files];
+  const files = emState.files; // 累积暂存的待上传照片(不能读 input,它每次选择都会被覆盖)
 
   if (!date) return emSetStatus('请选择日期', true);
 
@@ -249,15 +254,14 @@ async function emSave() {
   btn.disabled = true;
   btn.textContent = emState.entry ? '保存中...' : '发布中...';
   try {
-    // 新照片压缩(≤20 张,单文件 ≤10MB 由服务端校验)
+    // 新照片压缩(≤20 张,单文件 ≤10MB 由服务端校验);ggCompressPhoto 解码一次出 full+thumb 且带超时
     for (let i = 0; i < files.length; i++) {
       emSetStatus(`压缩照片 ${i + 1}/${files.length}...`);
-      const full = await emCompressImage(files[i], 1600, 0.85);
-      const thumb = await emCompressImage(files[i], 480, 0.75);
+      const { full, thumb } = await ggCompressPhoto(files[i]);
       fd.append('photo_full', full, files[i].name);
       fd.append('photo_thumb', thumb, files[i].name);
     }
-    emSetStatus(emState.entry ? '保存中...' : '发布中...');
+    emSetStatus('上传中...'); // 与压缩阶段分开显示,卡在哪一步一眼能看出
     const url = emState.entry ? '/api/update' : '/api/upload';
     const res = await fetch(url, { method: 'POST', body: fd });
     const data = await res.json().catch(() => ({}));
@@ -266,7 +270,9 @@ async function emSave() {
       return emSetStatus(data.error || `失败(HTTP ${res.status})`, true);
     }
     emClose();
-    if (emState.__onSaved) emState.__onSaved();
+    // 把刚保存的条目回传给调用方(/api/upload 与 /api/update 都返回 {ok, entry}),
+    // 首页据此跳到该日期并刷新,直接看到刚记的那条
+    if (emState.__onSaved) emState.__onSaved(data.entry || null);
     emSetStatus('');
   } catch (e) {
     emSetStatus(e.message || '网络异常,请重试', true);
@@ -288,7 +294,7 @@ function emInit() {
   const mapBtn = $('#em-map');
   if (mapBtn) mapBtn.addEventListener('click', emOpenMap);
   const files = $('#em-files');
-  if (files) files.addEventListener('change', emRenderNewPhotos);
+  if (files) files.addEventListener('change', emAddPickedPhotos);
   const save = $('#em-save');
   if (save) save.addEventListener('click', emSave);
 }
@@ -296,8 +302,11 @@ function emInit() {
 /* 公共 API(调用方在 open 时传 onSaved) */
 window.EntryModal = {
   open(opts) {
-    emState.__onSaved = (opts && opts.onSaved) || null;
     emOpen(opts || {});
+    // ⚠️ 必须在 emOpen 之后再挂:emOpen 里 `emState = { entry, ... }` 会整个替换对象,
+    // 先挂会被丢掉 → __onSaved 恒为 undefined,保存后所有 onSaved 回调都不触发
+    // (首页刷新 / 管理页 renderRecent / 专辑页 syncAlbumView 一起失效)
+    emState.__onSaved = (opts && opts.onSaved) || null;
   },
 };
 

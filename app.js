@@ -161,18 +161,49 @@ function renderCalendar() {
 
 function selectDate(ds) {
   selectedDate = ds;
+  // 日历跟随所选日期:否则跨月选中(翻页按钮 / 记一把存到别的月份)时日历与面板各说各话
+  if (ds) currentMonth = ds.slice(0, 7);
+  const nav = $('#day-nav');
+  if (nav) nav.hidden = !ds; // 未选日期(初始占位文案)时不显示翻页
   renderCalendar();
   renderDayEntries(ds);
   renderDayTodos(ds);
 }
 
+/* 前一天 / 后一天:与直接点日历那天完全一致 —— 同样走 selectDate(跨月由它同步日历月份) */
+function shiftDay(delta) {
+  if (!selectedDate) return;
+  const d = new Date(selectedDate + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  const p = (n) => String(n).padStart(2, '0');
+  selectDate(`${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`);
+  // 按钮在面板底部:翻页后把面板滚回顶部,否则新内容可能不在视野里(尤其当天没内容会塌陷)
+  const panel = document.querySelector('.day-panel');
+  if (panel) panel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
+function initDayNav() {
+  const prev = $('#day-prev');
+  const next = $('#day-next');
+  if (prev) prev.addEventListener('click', () => shiftDay(-1));
+  if (next) next.addEventListener('click', () => shiftDay(1));
+}
+
 // 当天动态渲染(selectDate 与打卡后刷新共用)
-/* 日记弹窗保存后刷新(重拉条目 + 日历/当日动态/专辑流) */
-async function refreshAll() {
+/* 日记弹窗保存后刷新(重拉条目 + 日历/当日动态/专辑流)
+ * savedEntry:弹窗回传的刚保存条目;有则跳到它那天并切到「当日动态」,
+ * 否则「记一把」之后新的那条不会出现在界面上(未选日期时当日动态根本不渲染) */
+async function refreshAll(savedEntry) {
   try {
     const data = await (await fetch('/api/entries')).json();
     allEntries = data.entries || [];
   } catch { /* 保留旧数据 */ }
+  const ds = savedEntry && savedEntry.date;
+  if (ds) {
+    selectDate(ds);      // 重绘日历 + 当日动态 + 当日待办
+    switchTab('entries');
+    return;
+  }
   renderCalendar();
   if (selectedDate) {
     renderDayEntries(selectedDate);
@@ -588,33 +619,7 @@ let ckinLat = null;  // 自动定位得到的坐标(随保存提交,服务端直
 let ckinLng = null;
 let ckinDragJustDone = false; // 触屏拖拽结束后吞掉紧随的 click
 
-function compressImage(file, maxLen, quality) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const scale = Math.min(1, maxLen / Math.max(img.width, img.height));
-        const w = Math.max(1, Math.round(img.width * scale));
-        const h = Math.max(1, Math.round(img.height * scale));
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        URL.revokeObjectURL(url);
-        canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
-      } catch (e) {
-        URL.revokeObjectURL(url);
-        reject(e);
-      }
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('图片无法解码(HEIC 请用 iPhone Safari 打开)'));
-    };
-    img.src = url;
-  });
-}
+/* 图片压缩走 photo.js 的共享实现(解码一次出 full+thumb,带超时兜底,不再这里重复一份) */
 
 function openCheckinModal(t, ds, editEntry) {
   ckinTodo = t;
@@ -751,10 +756,8 @@ async function handleCkinFiles(ev) {
   const st = $('#ckin-status');
   for (const f of files) {
     try {
-      const [full, thumb] = await Promise.all([
-        compressImage(f, 1600, 0.85),
-        compressImage(f, 480, 0.75),
-      ]);
+      // 共享压缩:解码一次出 full+thumb(原先是 Promise.all 并行解两次大图,手机上极易卡住)
+      const { full, thumb } = await ggCompressPhoto(f);
       ckinFulls.push(new File([full], `p${ckinFulls.length}.jpg`, { type: 'image/jpeg' }));
       ckinThumbs.push(new File([thumb], `p${ckinThumbs.length}.jpg`, { type: 'image/jpeg' }));
       const img = document.createElement('img');
@@ -1208,6 +1211,7 @@ async function init() {
   });
   initCalendar();
   initTabs();
+  initDayNav(); // 当日面板底部「前一天/后一天」
   initPortalUser(); // 探测登录态 + 拉私有待办(待办橙点/待办区仅登录可见)
 
   const now = new Date();
