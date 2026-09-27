@@ -312,6 +312,28 @@ function renderDayEntries(ds) {
     : '<p class="empty">当日无事发生</p>';
   bindPhotoGridFallback($('#day-entries'));
   bindStreamEditBtns($('#day-entries'));
+  renderDayMap(dayEntries);
+}
+
+/* 当天足迹地图:当天带定位的条目 → 点位 + 轨迹。
+ * 完全复用 map-common.renderCheckinMap(与专辑页/分享页/导出页同一个组件:底图按区域自动选高德或 OSM、
+ * 图钉按屏幕距离聚合、点图钉看文字+图片详情、右上角 ⛶ 全屏),轨迹由 loc-picker.getRouteLine 提供。
+ * 不重复实现任何地图逻辑。 */
+function renderDayMap(dayEntries) {
+  const box = $('#day-map');
+  if (!box || !window.MapCommon) return;
+  // 「当日待办」tab 下动态面板是隐藏的:容器宽高为 0,Leaflet 会算错视野与瓦片,
+  // 所以先不建图;切回「当日动态」时 switchTab 会重跑 renderDayEntries 再画
+  const pane = $('#tab-entries');
+  if (pane && pane.hidden) return;
+  const located = (dayEntries || []).filter((e) => e.location && e.location.lat != null && e.location.lng != null);
+  if (!located.length) {
+    box.style.display = 'none';
+    if (box._ggMap) { try { box._ggMap.remove(); } catch { /* 已移除 */ } box._ggMap = null; }
+    return;
+  }
+  // 地图嵌在会滚动的长页里 → 关掉滚轮缩放(与导出页一致),手机上本就没有滚轮,不受影响
+  MapCommon.renderCheckinMap(box, located, { containerId: 'day-map', scrollWheelZoom: false }).catch(() => { /* 地图失败不影响列表 */ });
 }
 
 /* ---------- 私有待办(规划打卡;仅登录用户可见) ---------- */
@@ -949,7 +971,7 @@ function locateCheckin() {
   const input = $('#ckin-loc');
   st.textContent = '定位中…';
   let settled = false;
-  const done = (lat, lng) => {
+  const done = (lat, lng, msg) => {
     if (settled) return;
     settled = true;
     ckinLat = lat;
@@ -965,14 +987,14 @@ function locateCheckin() {
       } catch {
         input.value = `${lat.toFixed(5)},${lng.toFixed(5)}`;
       }
-      st.textContent = '';
+      st.textContent = msg || '';
     })();
   };
   const fail = (err) => {
     if (settled) return;
     settled = true;
     if (isWechatBrowser()) {
-      st.textContent = '微信内无法定位,请点右上角 ⋯ 选「在浏览器打开」后重试';
+      st.textContent = '微信内无法定位,请点右上角 ⋯ 选「在浏览器打开」后重试,或用「🗺️ 地图」选点';
       return;
     }
     LocPicker.lpDeniedCheck().then((denied) => {
@@ -988,73 +1010,12 @@ function locateCheckin() {
     ckinLng = null;
   };
 
-  // 微信内置浏览器:禁用 H5 定位(getCurrentPosition 被屏蔽),但 IP 定位(服务端)不受影响
-  // → 自动降级到 IP 城市级定位,并提示用地图选点精确定位
-  if (/MicroMessenger/i.test(navigator.userAgent)) {
-    st.textContent = '微信内无法精确定位,改用 IP 定位(城市级)…';
-    LocPicker.lpIpLocate().then((ip) => {
-      if (ip) {
-        done(ip.lat, ip.lng);
-        st.textContent = 'IP 定位(城市级,可能偏差几个街区),建议直接点地图选精确位置';
-      } else {
-        st.textContent = '微信内无法定位:点右上角 ⋯ 选「在浏览器打开」后重试,或用「🗺️ 地图」选点';
-      }
-    });
-    return;
-  }
-  // ① 浏览器原生定位:同步启动,手势激活期内 Chrome 才会弹权限框
-  if (!navigator.geolocation) {
-    fail();
-  } else {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        // ⚠️ 检查精度:accuracy>300m 视为低精度(夸克等国产浏览器常返回网络估位飘几个街区)
-        // → 不直接用,继续走高德精确定位
-        if (pos.coords.accuracy != null && pos.coords.accuracy > 300) {
-          st.textContent = '浏览器定位精度低,改用高德精确定位…';
-          tryAmap();
-          return;
-        }
-        // 坐标系自检:夸克等国产浏览器可能已返回 GCJ-02,再 wgs2gcj 会双重偏移(东南几百米)
-        st.textContent = '定位中,校正坐标…';
-        LocPicker.lpCalibrate(pos.coords.latitude, pos.coords.longitude).then((g) => done(g.lat, g.lng));
-      },
-      (err) => tryAmap(),
-      // enableHighAccuracy:true = GPS 精确定位(户外 10-50m);false 网络定位会飘几个街区
-      // 超时 12s(GPS 冷启动需时;原 5s 太短导致失败率高——之前误判为 highAccuracy 的锅)
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
-    );
-  }
-
-  // ② 高德定位(基站/WiFi 三角,国内更准);也检查精度,低精度才降级 IP
-  function tryAmap() {
-    st.textContent = '改用高德定位…';
-    LocPicker.lpAmapLocate().then((g) => {
-      if (g) {
-        // 高德 result.accuracy 有值且>300m → 低精度,继续降级
-        if (g.accuracy != null && g.accuracy > 300) {
-          st.textContent = '高德定位精度低,改用 IP 定位…';
-          tryIp();
-          return;
-        }
-        done(g.lat, g.lng);
-        return;
-      }
-      tryIp();
-    });
-  }
-
-  // ③ IP 定位(城市级兜底,必成功)
-  function tryIp() {
-    st.textContent = '改用 IP 定位(城市级)…';
-    LocPicker.lpIpLocate().then((ip) => {
-      if (ip) {
-        done(ip.lat, ip.lng);
-      } else {
-        fail();
-      }
-    });
-  }
+  /* 统一链(浏览器原生 → 高德 → IP):细节见 loc-picker.lpLocateSmart —— 之前这里/main/edit 各抄一份,
+   * 编辑弹窗那份漏了兜底,于是国内点「定位」直接失败(2026-09-25)。现在只剩一份实现。 */
+  LocPicker.lpLocateSmart((t) => { st.textContent = t; }).then((g) => {
+    if (!g || g.fail) { fail(g && g.err); return; }
+    done(g.lat, g.lng, g.src === 'ip' ? 'IP 定位(城市级,可能偏差几个街区),建议直接点地图选精确位置' : '');
+  });
 }
 
 /* ---------- 待办拖拽排序(桌面 HTML5 DnD + 触屏长按) ---------- */
@@ -1176,20 +1137,17 @@ function openCkinMap() {
 }
 
 /* ---------- 大图 ---------- */
+/* 首页动态流里的照片点击 → 大图。打开/关闭的实现统一在 map-common(openLightbox 自带
+ * 「点任意处 / Esc 关闭」,并把 z-index 提到弹层之上)—— 之前关闭逻辑只写在这里,
+ * 管理页/导出页没有 app.js 就没人关,出现「点开图片退不出来」(2026-09-17)。 */
 function setupLightbox() {
-  const lb = document.getElementById('lightbox');
+  if (!window.MapCommon || !MapCommon.openLightbox) return;
   document.addEventListener('click', (e) => {
+    if (e.target.closest('#lightbox')) return; // 大图自身的点击交给「关闭」处理,别又打开一次
     const img = e.target.closest('.photo-grid img');
-    if (!img || !lb) return;
-    lb.querySelector('img').src = img.dataset.full || img.src;
-    lb.classList.add('open');
+    if (!img) return;
+    MapCommon.openLightbox(img.dataset.full || img.src);
   });
-  if (lb) {
-    lb.addEventListener('click', () => lb.classList.remove('open'));
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') lb.classList.remove('open');
-    });
-  }
 }
 
 async function loadEntries() {
