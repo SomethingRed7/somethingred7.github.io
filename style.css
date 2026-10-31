@@ -1716,3 +1716,65 @@ body.lb-open { overflow: hidden; }
   color: var(--brand-deep, #b45309);
   border: 1px solid var(--brand-line, #f2d3a8);
 }
+
+/* ---------- 导出面板(2026-10-30:export.html 合并进管理页「导出」tab) ----------
+ * 原来独立页上的两块(行程总览 / 地图路线)现在是「导出」tab 下的一段,
+ * 用分隔线跟上面的条件区分开;滚动定位时别被吸顶的 tab 栏盖住标题。 */
+.export-host {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 96px;
+}
+.export-host .ex-title { margin: 0 0 4px; font-size: 1rem; }
+.export-host .ex-hint { margin: 0 0 10px; }
+.export-host .ex-actions { margin-top: 0; }
+.export-host #ex-overview { margin-top: 4px; }
+.ex-map-title {
+  margin: 18px 0 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+/* 导出地图比专辑地图略高,路线看得清一点 */
+.export-host .album-map { height: 240px; }
+
+/* 专辑查看里的「生成分享页」原来是 <a href>,改成 <button> 后补齐按钮外观 */
+button.btn-add-entry {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+/* ---------- 空白日期：给入口，不只是给结论（2026-10-31） ----------
+ * 原来只有一句「当日无事发生」，像结案陈词。改成一句话 + 一个直接入口。 */
+.day-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 30px 16px 26px;
+  text-align: center;
+}
+.day-empty p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--text-soft, #8a8177);
+}
+.day-empty-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border: 1px dashed var(--brand-line, #f2d3a8);
+  border-radius: 999px;
+  background: var(--brand-soft, #fef3c7);
+  color: var(--brand-deep, #b45309);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.day-empty-add:active { opacity: 0.75; }
