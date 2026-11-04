@@ -349,7 +349,7 @@ function renderDayEntries(ds) {
   try {
     html = dayEntries.length
       ? dayEntries.map((e) => entryCard(e, currentUser ? { editBtn: true } : null)).join('')
-      : '<p class="empty">这天没有记录</p>';
+      : '<div class="day-empty"><p class="day-empty-main">这天没有记录</p></div>';
   } catch (err) {
     console.error('渲染当日条目失败', err);
     html = '<p class="empty">这天显示不出来，刷新一下试试</p>';
@@ -357,7 +357,7 @@ function renderDayEntries(ds) {
   $('#day-entries').innerHTML = html;
   bindPhotoGridFallback($('#day-entries'));
   bindStreamEditBtns($('#day-entries'));
-  renderDayMap(dayEntries);
+  // 当日足迹地图已从「当日动态」移除（2026-11-04 用户要求），renderDayMap 保留备用
 }
 
 /* 当天足迹地图:当天带定位的条目 → 点位 + 轨迹。
@@ -389,7 +389,8 @@ async function initPortalUser(authP) {
   try {
     const res = await (authP || fetch('/api/auth').then((r) => r.json()));
     currentUser = res.user || null;
-  } catch { currentUser = null; }
+    window.currentUser = currentUser;   // 供 reading.js 等独立模块判断登录态
+  } catch { currentUser = null; window.currentUser = null; }
   if (currentUser) {
     box.hidden = false;
     // 登录态:用户名 + 管理按钮(btn-write 样式,同原「写日记」入口)
@@ -451,13 +452,20 @@ function switchTab(tab) {
   document.querySelectorAll('#panel-tabs .tab-btn').forEach((b) => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
-  ['todos', 'entries', 'reading'].forEach((t) => {
+  // ⚠️ 这里列出所有「当日面板」的子 tab。漏一个的后果不是报错，而是那个面板
+  // 永远保持 hidden —— 点了 tab 标题高亮，内容区却一片空白（2026-11-04 加「当日运动」时就漏了）
+  ['todos', 'entries', 'reading', 'activity'].forEach((t) => {
     const pane = $('#tab-' + t);
     if (pane) pane.hidden = t !== tab;
   });
   if (tab === 'todos' && selectedDate) renderDayTodos(selectedDate);
   if (tab === 'entries' && selectedDate) renderDayEntries(selectedDate);
-  // 「当日在读」内容由 reading.js 自行跟随日期渲染,这里不用管
+  // 「当日在读」「当日运动」由各自脚本渲染。这里再补发一次日期事件：
+  // 光靠初始化那次 gg:date 不够 —— 若那时数据还没到（或请求失败），面板就会空着。
+  // 切 tab 是用户明确要看内容，重放一次最稳。
+  if ((tab === 'reading' || tab === 'activity') && selectedDate) {
+    window.dispatchEvent(new CustomEvent('gg:date', { detail: { date: selectedDate } }));
+  }
 }
 
 function initTabs() {
@@ -495,7 +503,7 @@ function renderDayTodos(ds) {
         <button type="button" class="todo-del" data-id="${t.id}" aria-label="删除">✕</button>
       </div>`;
       }).join('')
-    : '<p class="todo-empty">这天还没有待办,添加一条开始打卡</p>';
+    : '<div class="day-empty"><p class="day-empty-main">这天还没有待办</p><p class="day-empty-tip">加一条，开始打卡</p></div>';
   box.innerHTML = `
     <div class="todo-head-slim"><span class="todo-progress">已勾 ${done}/${list.length}</span></div>
     <form class="todo-add"><input type="text" maxlength="200" placeholder="添加一条待办…" required><button type="submit" class="btn-small">添加</button></form>
@@ -1306,3 +1314,73 @@ PullRefresh.init({
     return refreshAll();
   },
 });
+
+/* ---------- 版本自检：发现自己加载的是旧版就自动刷一次（2026-11-04） ----------
+ * 成因：SW 对 HTML 是 network-first，但超时（原来 1.5s）就用缓存 —— pages.dev 国内没边缘
+ * 节点，跨境经常超时，于是拿到旧 HTML，旧 HTML 又引用旧 ?v= 的 JS/CSS。表现就是
+ * 「代码明明改了，用户看到的还是上一版」（今天为此反复踩坑）。
+ *
+ * 做法：一次会话只查一次，把自己的 app.js?v= 和服务端 HTML 里的对比，不一致就 reload。
+ * 用 sessionStorage 打标防止死循环。
+ */
+(function versionCheck() {
+  try {
+    // WebView（尤其安卓 Capacitor）不会像 Chrome 那样在导航时主动查 SW 更新，
+    // 导致 app 里长期停在旧版、而浏览器打开却是新的。这里每次加载都催一次。
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration()
+        .then((r) => r && r.update())
+        .catch(() => {});
+    }
+    if (sessionStorage.getItem('gg_ver_checked')) return;
+    const self = [...document.scripts].find((s) => /app\.js\?v=/.test(s.src));
+    const mine = self && (self.src.match(/app\.js\?v=([0-9a-z]+)/) || [])[1];
+    if (!mine) return;
+    sessionStorage.setItem('gg_ver_checked', '1');
+    fetch('/', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.text() : ''))
+      .then((html) => {
+        const m = html && html.match(/app\.js\?v=([0-9a-z]+)/);
+        if (m && m[1] && m[1] !== mine) location.reload();
+      })
+      .catch(() => { /* 拿不到就算了，不打扰用户 */ });
+  } catch { /* 隐私模式等拿不到 sessionStorage，跳过 */ }
+})();
+
+/* ---------- 长按标题清缓存（2026-11-04） ----------
+ * 安卓 Capacitor 的 WebView 不会像 Chrome 那样主动更新 Service Worker，app 里可能长期
+ * 停在旧版，而浏览器打开却是新的。app 内又没有任何清缓存入口，用户只能干瞪眼。
+ * 这里给个藏起来的自救开关：长按左上角标题 1.2 秒 → 注销 SW + 清离线缓存 → 重载。
+ * （网页端仍可用 /reset.html，作用一样。） */
+(function bindHardReset() {
+  const title = document.querySelector('.site-title') || document.querySelector('.header-main');
+  if (!title) return;
+  let timer = null;
+
+  const run = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { try { await r.unregister(); } catch { /* 忽略 */ } }
+      }
+      if (window.caches) {
+        const keys = await caches.keys();
+        for (const k of keys) { try { await caches.delete(k); } catch { /* 忽略 */ } }
+      }
+      try { sessionStorage.clear(); } catch { /* 隐私模式 */ }
+    } catch { /* 清不掉也照常重载 */ }
+    location.replace('/?fresh=' + Date.now());
+  };
+
+  const start = () => { if (!timer) timer = setTimeout(() => { timer = null; run(); }, 1200); };
+  const cancel = () => { if (timer) { clearTimeout(timer); timer = null; } };
+
+  title.addEventListener('touchstart', start, { passive: true });
+  title.addEventListener('touchend', cancel);
+  title.addEventListener('touchmove', cancel, { passive: true });
+  title.addEventListener('touchcancel', cancel);
+  title.addEventListener('mousedown', start);
+  title.addEventListener('mouseup', cancel);
+  title.addEventListener('mouseleave', cancel);
+})();
+

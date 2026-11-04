@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>咕咕嘎嘎 · 旅行日记</title>
-  <link rel="stylesheet" href="style.css?v=20261104h">
+  <link rel="stylesheet" href="style.css?v=20261104y">
 </head>
 <body>
   <header class="site-header">
@@ -16,6 +16,40 @@
   </header>
 
   <main class="layout">
+    <section class="panel day-panel">
+      <div class="day-head">
+        <h2 id="day-title" class="panel-heading">点击日历上的日期,查看当天动态</h2>
+        <div class="day-nav" id="day-nav" hidden>
+          <button type="button" id="day-prev" class="day-nav-btn" aria-label="前一天">‹</button>
+          <button type="button" id="day-next" class="day-nav-btn" aria-label="后一天">›</button>
+        </div>
+      </div>
+      <div class="panel-tabs" id="panel-tabs">
+        <button type="button" class="tab-btn active" data-tab="entries">当日动态</button>
+        <button type="button" class="tab-btn" data-tab="todos">当日待办</button>
+        <button type="button" class="tab-btn" data-tab="reading">当日在读</button>
+        <button type="button" class="tab-btn" data-tab="activity">当日运动</button>
+      </div>
+      <div id="tab-todos" class="tab-pane" hidden>
+        <div id="day-todos" class="todo-section" hidden></div>
+      </div>
+      <div id="tab-entries" class="tab-pane">
+        <!-- tab 已经写明「当日动态」,这里不再重复标题;只留「记一把」入口 -->
+        <div class="day-head-actions" id="day-head-actions"><a id="btn-entry-add" class="btn-add-entry" href="edit.html" hidden>记一把</a></div>
+        <div id="day-entries" class="entries"></div>
+      </div>
+      <!-- 当日在读:微信读书每日总结(数据由播报脚本推送,前端只读;跟随所选日期) -->
+      <div id="tab-reading" class="tab-pane" hidden>
+        <div class="pane-actions" id="rd-actions" hidden><button type="button" class="btn-add-entry" id="rm-add-top">记一本</button></div>
+        <div id="reading-body" class="reading-body"></div>
+      </div>
+      <!-- 当日运动:COROS 同步的运动记录(同样由外部脚本推送;跟随所选日期) -->
+      <div id="tab-activity" class="tab-pane" hidden>
+        <div class="pane-actions" id="ac-actions" hidden><button type="button" class="btn-add-entry" id="am-add-top">记一次</button></div>
+        <div id="activity-body" class="activity-body"></div>
+      </div>
+    </section>
+
     <section class="panel calendar-panel">
       <div class="cal-nav">
         <button id="cal-prev" class="cal-btn" aria-label="上个月">‹</button>
@@ -27,34 +61,6 @@
       </div>
       <div id="cal-grid" class="cal-grid"></div>
     </section>
-
-    <section class="panel day-panel">
-      <h2 id="day-title" class="panel-heading">点击日历上的日期,查看当天动态</h2>
-      <div class="panel-tabs" id="panel-tabs">
-        <button type="button" class="tab-btn active" data-tab="entries">当日动态</button>
-        <button type="button" class="tab-btn" data-tab="todos">当日待办</button>
-        <button type="button" class="tab-btn" data-tab="reading">当日在读</button>
-      </div>
-      <div id="tab-todos" class="tab-pane" hidden>
-        <div id="day-todos" class="todo-section" hidden></div>
-      </div>
-      <div id="tab-entries" class="tab-pane">
-        <!-- tab 已经写明「当日动态」,这里不再重复标题;只留「记一把」入口 -->
-        <div class="day-head-actions" id="day-head-actions"><a id="btn-entry-add" class="btn-add-entry" href="edit.html" hidden>记一把</a></div>
-        <div id="day-entries" class="entries"></div>
-        <!-- 当天足迹:当天带定位的条目点位 + 轨迹(复用 map-common.renderCheckinMap,与专辑/分享/导出页同款组件) -->
-        <div id="day-map" class="day-map"></div>
-      </div>
-      <!-- 当日在读:微信读书每日总结(数据由播报脚本推送,前端只读;跟随所选日期) -->
-      <div id="tab-reading" class="tab-pane" hidden>
-        <div id="reading-body" class="reading-body"></div>
-      </div>
-      <!-- 前一天/后一天:与直接点日历那天走同一条路径(跨月时日历跟着翻) -->
-      <div class="day-nav" id="day-nav" hidden>
-        <button type="button" id="day-prev" class="btn-small">‹ 前一天</button>
-        <button type="button" id="day-next" class="btn-small">后一天 ›</button>
-      </div>
-    </section>
   </main>
 
   <footer class="site-footer">咕咕嘎嘎 · 记录每一段在路上</footer>
@@ -64,6 +70,60 @@
     <div class="modal-card">
       <div id="preview-body"></div>
       <button type="button" id="btn-preview-close" class="btn-small">关闭</button>
+    </div>
+  </div>
+
+  <!-- 记一次:手动添加运动记录(COROS 没记到的) -->
+  <div id="act-modal" class="ckin-modal" hidden>
+    <div class="ckin-box">
+      <div class="ckin-head"><span id="am-head">记一次</span><button type="button" id="am-close" class="ckin-x" aria-label="关闭">✕</button></div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label">运动</label>
+        <div id="am-kinds" class="chip-row"></div>
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="am-name">名称</label>
+        <input id="am-name" maxlength="30" placeholder="跑步 / 骑行 / 羽毛球…">
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="am-minutes">时长</label>
+        <input id="am-minutes" type="number" min="0" max="1440" placeholder="分钟">
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="am-dist">距离</label>
+        <input id="am-dist" type="number" min="0" step="0.1" placeholder="公里（可空）">
+      </div>
+      <div class="rm-save-row">
+        <button type="button" id="am-save" class="rm-save-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 记一本:手动添加阅读记录(微信读书之外的书/纸质书) -->
+  <div id="read-modal" class="ckin-modal" hidden>
+    <div class="ckin-box">
+      <div class="ckin-head"><span id="rm-head">记一本</span><button type="button" id="rm-close" class="ckin-x" aria-label="关闭">✕</button></div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="rm-title">书名</label>
+        <input id="rm-title" maxlength="100" placeholder="必填">
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="rm-author">作者</label>
+        <input id="rm-author" maxlength="50" placeholder="可选">
+      </div>
+      <div class="ckin-vis-row">
+        <label class="ckin-vis-label" for="rm-minutes">时长</label>
+        <input id="rm-minutes" type="number" min="0" max="1440" placeholder="分钟">
+      </div>
+      <textarea id="rm-summary" rows="4" maxlength="2000" placeholder="摘要 / 感想（可选）"></textarea>
+      <div class="rm-file-row">
+        <label class="rm-file-btn" for="rm-photos">+ 图片</label>
+        <input id="rm-photos" type="file" accept="image/*" multiple hidden>
+        <span id="rm-file-count" class="rm-file-count"></span>
+      </div>
+      <div class="rm-save-row">
+        <button type="button" id="rm-save" class="rm-save-btn">保存</button>
+      </div>
     </div>
   </div>
 
@@ -150,7 +210,8 @@
   <script src="loc-picker.js?v=20261102f"></script>
   <script src="entry-modal.js?v=20261102e"></script>
   <script src="pull-refresh.js?v=20261102d"></script>
-  <script src="app.js?v=20261104f"></script>
-  <script src="reading.js?v=20261104h"></script>
+  <script src="app.js?v=20261104t"></script>
+  <script src="reading.js?v=20261105c"></script>
+  <script src="activity.js?v=20261104z"></script>
 </body>
 </html>
